@@ -211,39 +211,39 @@ def ordem_normal_free(tensor, tipo_de_expansao): #mudado
 
     n = len(ord_normal) #Salva número de elementos fundamentais encontrados
 
-    # Ordena as tuplas: primeiro pelo tipo do elemento, depois pelo número de derivadas
+    #Ordena as tuplas: primeiro pelo tipo do elemento, depois pelo número de derivadas
     ord_normal.sort(key=lambda x: (x[0], x[1])) #Define uma função lambda (sem nome) que segue o critério de ordenação x[0], x[1]
-    #MARYANA: A partir daqui está igual ao original, tentar deixar apenas uma estrutura de repetição
-    lista_partes_nova = []
+    
+    #Reescreve tensor na ordem correta
+    tensor_ordem_normal = [] 
+    n_idx = 0  # Total de índices já utilizados
 
-    for p in range(len(ord_normal)):
-        lista_partes_nova.append(Elem_fund[ord_normal[p][0]])
-        for q in range(ord_normal[p][1]): 
+    for p, (ord_elem, num_deriv) in enumerate(reversed(ord_normal)): #Varre o tupla ord_normal de trás para frente
+        nova_parte = Elem_fund[ord_elem] #Armazena o elemento fundamental
+
+        #Aplica as derivadas conforme o tipo de expansão
+        for q in range(num_deriv):
             if tipo_de_expansao == 'cf':
-                lista_partes_nova[p] = D(avanca_indice(lista_partes_nova[p]))*lista_partes_nova[p]
+                nova_parte = D(avanca_indice(nova_parte)) * nova_parte
             #elif (tipo_de_expansao == 'gz' or tipo_de_expansao == 'dl') and ord_normal[p][0] == pos_R: #Guilherme
-            elif ord_normal[p][0] == pos_R:
-                lista_partes_nova[p] = grad(avanca_indice(lista_partes_nova[p]))*lista_partes_nova[p]
+            elif (tipo_de_expansao == 'gz' or tipo_de_expansao == 'dl') and ord_elem == pos_R:
+                nova_parte = grad(avanca_indice(nova_parte)) * nova_parte
             else:
-                lista_partes_nova[p] = nabla(avanca_indice(lista_partes_nova[p]))*lista_partes_nova[p]
+                nova_parte = nabla(avanca_indice(nova_parte)) * nova_parte
 
-    tensor_ordem_normal = lista_partes_nova[n-1] 
-    n_idx = len(lista_partes_nova[n-1].get_indices()) 
+        #Substitui os índices
+        Indices = nova_parte.get_indices()
+        tuplas_de_indices = [(idx, Idx[n_idx + posit]) for posit, idx in enumerate(reversed(Indices))] #Armazena o índice (alpha, beta) e sua nova posição
+        nova_parte = nova_parte.substitute_indices(*tuplas_de_indices)
+        n_idx += len(Indices)
 
-    for r in range(1, n):
-        Indices = lista_partes_nova[n-(r+1)].get_indices()
-        tuplas_de_indices = []
-        ind = len(Indices) - 1
-        for s in range(len(Indices)):
-            tuplas_de_indices.insert(0, (Indices[ind-s], Idx[n_idx+s]))
-
-        n_idx = n_idx + len(Indices)
-        tensor_substituido = lista_partes_nova[n-(r+1)].substitute_indices(*tuplas_de_indices)
-        tensor_ordem_normal = tensor_substituido*tensor_ordem_normal
+        #Constrói o tensor final multiplicando progressivamente
+        if tensor_ordem_normal == []:
+            tensor_ordem_normal = nova_parte
+        else:
+            tensor_ordem_normal = nova_parte * tensor_ordem_normal
 
     #display(tensor_ordem_normal, ord_normal) #Não está no original! Apenas printa tensores para ver comportamento da função.
-
-
     return tensor_ordem_normal, ord_normal #Retorna o tensor reordenado e reconstruído e a sua ordem de elemento e derivadas
 #####################################################################################################################################
 def derivada_ordem_normal(ordem_normal, tipo_de_expansao):
