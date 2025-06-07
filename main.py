@@ -177,51 +177,68 @@ def reordena_lista(lista, inversao):
             lista_nova[pos_alpha], lista_nova[pos_beta] = beta, alpha
     return lista_nova
 #####################################################################################################################################
-def ordem_normal_free(tensor, tipo_de_expansao): #mudado
+def ordem_normal_tupla(tensor, tipo_de_expansao):
     """
     Simplifica e ordena as partes de um tensor simbólico baseado na ordem dos elementos fundamentais
     e na quantidade de derivadas aplicadas. Retorna o tensor reorganizado e a ordem como lista de tuplas.
     """
-    # Escolhe os elementos fundamentais conforme o tipo de expansão
-    if tipo_de_expansao == 'dl': #Landau
+    
+    if tipo_de_expansao == 'dl':
         Elem_fund = Elem_fun_dl
-    elif tipo_de_expansao == 'gz': #Grozdanov-Kapliz
+
+    elif tipo_de_expansao == 'gz':
         Elem_fund = Elem_fun_gz
-    else: #Para fluidos conformes
+        
+    else:
         Elem_fund = Elem_fun_cf
+    
+    lista_partes_tensor = tensor.split()
+    ord_nabla = 0
+    ord_normal = []
 
-    pos_R = len(Elem_fund) - 1 #Posição do tensor de Riemann (último)
-    lista_partes_tensor = tensor.split() #quebra do tensor em suas diferentes partes, incluindo os nablas
-    ord_nabla = 0 #número de nablas presentes num dado 'pedaço' do tensor, por exemplo, nabla(-beta)*u(-alpha)
-    ord_normal = [] #lista que guarda informações das partes do tensor, incluindo o número de nablas em cada um
+    for parte in lista_partes_tensor:
+        Indices = parte.get_indices()
+        tuplas_de_indices = [(j, Idx[len(Indices) - 1 - i]) for i, j in enumerate(Indices)]
+        tensor_parte_nova = parte.substitute_indices(*tuplas_de_indices)
 
-    for parte in lista_partes_tensor: #Varre cada "parte" do tensor: elemento fundamental + nablas
-        Indices = parte.get_indices() #extrai índices do pedaço de tensor (ex: alpha, beta...)
-        tuplas_de_indices = [(j, Idx[len(Indices) - 1 - i]) for i, j in enumerate(Indices)] #Armazena na tupla o índice junto com sua posição invertida
-        tensor_parte_nova = parte.substitute_indices(*tuplas_de_indices) #Substitui o índice pelo Idx
 
-        #Verifica se a parte do tensor é uma derivada
         if tensor_parte_nova == nabla(Idx[0]) or tensor_parte_nova == grad(Idx[0]) or tensor_parte_nova == D(Idx[0]):
             ord_nabla += 1
-        else: #Caso não seja uma derivada, descobre qual elemento fundamental é
-            for ord_elemf, elemf in enumerate(Elem_fund): #Varre os índices e valores de Elem_fund
+        else: 
+            for ord_elemf, elemf in enumerate(Elem_fund):
                 if tensor_parte_nova == elemf:
-                    ord_normal.append((ord_elemf, ord_nabla)) #Armazena a ordem do elemento e ordem de sua derivada
-                    ord_nabla = 0 #Zera o contador de derivadas
+                    ord_normal.append((ord_elemf, ord_nabla))
+                    ord_nabla = 0
 
-    n = len(ord_normal) #Salva número de elementos fundamentais encontrados
-
-    #Ordena as tuplas: primeiro pelo tipo do elemento, depois pelo número de derivadas
-    ord_normal.sort(key=lambda x: (x[0], x[1])) #Define uma função lambda (sem nome) que segue o critério de ordenação x[0], x[1]
     
-    #Reescreve tensor na ordem correta
+    ord_normal.sort(key=lambda x: (x[0], x[1]))
+
+    return ord_normal
+#####################################################################################################################################
+def ordem_normal_tensor(ord_normal, tipo_de_expansao):
+    """
+    Simplifica e ordena as partes de um tensor simbólico baseado na ordem dos elementos fundamentais
+    e na quantidade de derivadas aplicadas. Retorna o tensor reorganizado e a ordem como lista de tuplas.
+    """
+    
+    if tipo_de_expansao == 'dl':
+        Elem_fund = Elem_fun_dl
+
+    elif tipo_de_expansao == 'gz':
+        Elem_fund = Elem_fun_gz
+        
+    else:
+        Elem_fund = Elem_fun_cf
+
+    pos_R = len(Elem_fund) - 1
+
     tensor_ordem_normal = 1
-    n_idx = 0  # Total de índices já utilizados
+    n_idx = 0
 
-    for p, (ord_elem, num_deriv) in enumerate(reversed(ord_normal)): #Varre o tupla ord_normal de trás para frente
-        nova_parte = Elem_fund[ord_elem] #Armazena o elemento fundamental
+    for p, (ord_elem, num_deriv) in enumerate(reversed(ord_normal)):
+        nova_parte = Elem_fund[ord_elem]
 
-        #Aplica as derivadas conforme o tipo de expansão
+
         for q in range(num_deriv):
             if tipo_de_expansao == 'cf':
                 nova_parte = D(avanca_indice(nova_parte)) * nova_parte
@@ -231,16 +248,14 @@ def ordem_normal_free(tensor, tipo_de_expansao): #mudado
             else:
                 nova_parte = nabla(avanca_indice(nova_parte)) * nova_parte
 
-        #Substitui os índices
+
         Indices = nova_parte.get_indices()
-        tuplas_de_indices = [(idx, Idx[n_idx + posit]) for posit, idx in enumerate(reversed(Indices))] #Armazena o índice (alpha, beta) e sua nova posição
-        #display(tuplas_de_indices) #Teste para ver comportamento
+        tuplas_de_indices = [(idx, Idx[n_idx + posit]) for posit, idx in enumerate(reversed(Indices))]
         nova_parte = nova_parte.substitute_indices(*tuplas_de_indices)
         n_idx += len(Indices)
         tensor_ordem_normal = nova_parte * tensor_ordem_normal
 
-    #print(tensor_ordem_normal, ord_normal) #Não está no original! Apenas printa tensores para ver comportamento da função.
-    return tensor_ordem_normal, ord_normal #Retorna o tensor reordenado e reconstruído e a sua ordem de elemento e derivadas
+    return tensor_ordem_normal
 #####################################################################################################################################
 def derivada_ordem_normal(ordem_normal, tipo_de_expansao):
     """
@@ -294,8 +309,11 @@ def derivada_ordem_normal(ordem_normal, tipo_de_expansao):
             tensor_substituido = lista_partes_nova[n-(r+1)].substitute_indices(*tuplas_de_indices)
             elemento_ordem_normal = tensor_substituido*elemento_ordem_normal
 
+        '''
         novo_tensor_ord_normal = ordem_normal_free(elemento_ordem_normal, tipo_exp)[0]
-        #Guilherme: Verificar qual a entrada inserida nessa função, se a entrada já estiver arrumada a linha acima não tem sentido
+        ##Guilherme
+        '''
+        novo_tensor_ord_normal = ordem_normal_tensor(ordem_normal_tupla(elemento_ordem_normal, tipo_exp), tipo_exp)
         derivada_tensor.append(novo_tensor_ord_normal)
 
     return derivada_tensor
@@ -342,7 +360,11 @@ def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
     for n in range(2, ordem_hidro + 1): #esse loop varia sobre as ordens da hidrodinâmica, desde a segunda até a n-ésima ordem.
         I_temp = []
         for i in range(len(lista_ing[n-1])): #aqui são contruídos os elementos obtidos das derivadas da ordem anterior
+            '''
             lista_ordem_normal = ordem_normal_free(lista_ing[n-1][i], tipo_exp)[1]
+            ##Guilherme
+            '''
+            lista_ordem_normal = ordem_normal_tupla(lista_ing[n-1][i], tipo_exp)
             temp1 = derivada_ordem_normal(lista_ordem_normal, tipo_exp)
 
             for j in range(len(temp1)):
@@ -355,7 +377,11 @@ def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
             for k in range(len(lista_ing[B1[0]])):
                 for l in range(len(lista_ing[b2])):
                     tensor_temp = troca_indices(lista_ing[B1[0]][k], lista_ing[b2][l])
+                    '''
                     temp2 = ordem_normal_free(tensor_temp*lista_ing[b2][l], tipo_exp)[0]
+                    ##Guilherme
+                    '''
+                    temp2 = ordem_normal_tensor(ordem_normal_tupla(tensor_temp*lista_ing[b2][l], tipo_exp), tipo_exp)
                     if compara_tensor_lista(temp2, I_temp) == False:
                         I_temp.append(temp2)
 
@@ -383,7 +409,11 @@ def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
             lista_ing_fluido, lista_ing_curvatura, lista_ing_temp = [], [], []
 
             for j in range(len(lista_ing[i])):
+                '''
                 ord_tens_temp = ordem_normal_free(lista_ing[i][j], tipo_exp)[1]
+                ##Guilherme
+                '''
+                ord_tens_temp = ordem_normal_tupla(lista_ing[i][j], tipo_exp)
 
                 for k in range(len(ord_tens_temp)):
                     if ord_tens_temp[k][0] == pos_R:
@@ -1220,9 +1250,14 @@ def estruturas_contraidas(grau_tens, Estruturas_tensoriais, tipo_de_expansao):
     Est_contraida = [] #lista que armazena as estruturas contraídas independentes de grau N
     from itertools import permutations
     for r in range(0, len(Estruturas_tensoriais)): #varre todas as estruturas tensoriais possíveis para uma dada hidrodinâmica
-        #print('r = ', r)
+        '''
         estrutura_nova = ordem_normal_free(Estruturas_tensoriais[r], tipo_exp)[0]
         ord_free = ordem_normal_free(Estruturas_tensoriais[r], tipo_exp)[1]
+        ##Guilherme
+        '''
+        
+        ord_free = ordem_normal_tupla(Estruturas_tensoriais[r], tipo_exp)
+        estrutura_nova = ordem_normal_tensor(ord_free, tipo_exp)
         ord_dummy = ordem_com_indices(Estruturas_tensoriais[r], tipo_exp)
         (count_u, count_F, n_dif_F, count_R, n_dif_R) = (0, 0, 0, 0, 0) #contadores dos u's, de R's e F's e de suas derivadas
         for s in range(len(ord_dummy)):
