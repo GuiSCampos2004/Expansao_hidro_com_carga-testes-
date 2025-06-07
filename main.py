@@ -98,18 +98,27 @@ def troca_indices(tensor1, tensor2):
         for k in range(len(lista_indices2)):
             for l in range(len(Idx)):
                 if lista_indices2[k] == Idx[l] or lista_indices2[k] == - Idx[l]:
-                    ordem_dos_indices2.append(l) #armazena a ordem (na lista Idx) dos índices do tensor2'''
+                    ordem_dos_indices2.append(l) #armazena a ordem (na lista Idx) dos índices do tensor2
 
         for j in range(len(Idx)):
                 if lista_indices2[0] == Idx[j] or lista_indices2[0] == -Idx[j]:
-                    ordem_dos_indices2 = j #Guilherme: ordem_dos_indices2 agora tem informação apenas do primeiro indice
-
+                
+                    ordem_dos_indices2 = j #Guilherme: ordem_dos_indices2 agora tem informação apenas do primeiro indice'''
+        
+        for i, item in enumerate(Idx):
+                if lista_indices2[0] == item or lista_indices2[0] == -item:
+                    ordem_dos_indices2 = i #Guilherme: ordem_dos_indices2 agora tem informação apenas do primeiro indice e o uso do enumerate evita a busca por informações no endereço de Idx
+        
         tuplas_de_indices = []
         ind = ordem_dos_indices2
+        '''
         for m in range(len(lista_indices1)):
             tuplas_de_indices.append((lista_indices1[m], Idx[ind + len(lista_indices1) - m]))
-        tensor_novo = tensor1.substitute_indices(*tuplas_de_indices) #Guilherme: Checar se existe alguma outra forma de modificar os indices, se eu puder trocar os indices diretamente posso descartar a procura dos indices do tensor1 desta função
-        #Guilherme Tentar implementar 'zip' aqui
+        '''
+        novos_indices = Idx[ind : ind + len(lista_indices1)] #Guilherme: faz um recorte da lista Idx que contém os elementos uteis
+        tuplas_de_indices = zip(lista_indices1, reversed(novos_indices))
+        
+        tensor_novo = tensor1.substitute_indices(*tuplas_de_indices)
 
     else:
         tensor_novo = tensor1
