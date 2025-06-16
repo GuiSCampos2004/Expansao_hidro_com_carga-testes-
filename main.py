@@ -361,11 +361,11 @@ def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
         if ordem_hidro == 1:
             lista_ing_final = lista_ing'''
 
-    #Guilherme: O código é fechado, não há por que colocar uma ordem_hidro menor que 1, então não é necessário intervir no caso ordem_hidro == 0
-    if ordem_hidro == 1:
+    #Guilherme: O código é fechado, não há por que colocar uma ordem_hidro menor que 2
+    '''if ordem_hidro == 1:
           lista_ing_final = lista_ing
-    else:
-      for n in range(2, ordem_hidro + 1): #esse loop varia sobre as ordens da hidrodinâmica, desde a segunda até a n-ésima ordem.
+    else:'''
+    for n in range(2, ordem_hidro + 1): #esse loop varia sobre as ordens da hidrodinâmica, desde a segunda até a n-ésima ordem.
           I_temp = []
 
           for i in range(len(lista_ing[n-1])): #aqui são contruídos os elementos obtidos das derivadas da ordem anterior
@@ -1366,10 +1366,40 @@ def estruturas_contraidas(grau_tens, Estruturas_tensoriais, tipo_de_expansao):
 tipo_de_expansao = 'gz'
 ordem_da_expansao = 3
 curvatura = 1
-lista_ingredientes, lista_M = ingredientes(ordem_da_expansao, curvatura, tipo_de_expansao)
-for k in range(len(lista_ingredientes[ordem_da_expansao])):
-    print(k)
-    display(inverte_indices(lista_ingredientes[ordem_da_expansao][k]))
+
+#Guilherme: Controle de casos para ordem_da_expansao entre 0 e 1 não chamar ingredientes
+Matriz0 = [u(Idx[0]), g(Idx[1], Idx[0])]
+Matriz1 = [[nabla(Idx[0])*T(), nabla(Idx[0])*mu(), nabla(Idx[1])*u(Idx[0])],[Theta(), nabla(Idx[0])*T(), nabla(Idx[0])*mu(), sigma(Idx[1], Idx[0]), Omega(Idx[1], Idx[0])],[sigma(Idx[1], Idx[0]), Omega(Idx[1], Idx[0])]]
+lista_M = [[1,2]]
+if ordem_da_expansao == 0:
+  for i in range(2):
+    print(i)
+    display(Matriz0[i])
+
+elif ordem_da_expansao == 1:
+  if tipo_de_expansao == 'gz':
+    lista_M.append([1,1,2])
+    for i in range(3):
+      print(i)
+      display(Matriz1[0][i])
+
+  elif tipo_de_expansao == 'dl':
+    lista_M.append([0, 1, 1, 2, 2])
+    for i in range(5):
+      print(i)
+      display(Matriz1[1][i])
+
+  else:
+    for i in range(2):
+      lista_M.append([2,2])
+      print(i)
+      display(Matriz1[1][i])
+
+else:
+  lista_ingredientes, lista_M = ingredientes(ordem_da_expansao, curvatura, tipo_de_expansao)
+  for i in range(len(lista_ingredientes[ordem_da_expansao])):
+    print(i)
+    display(inverte_indices(lista_ingredientes[ordem_da_expansao][i]))
 #####################################################################################################################################
 grau_tensor = 2
 Estruturas_gerais = estruturas_tensoriais(ordem_da_expansao, grau_tensor, lista_ingredientes, lista_M, tipo_de_expansao)
