@@ -1,5 +1,6 @@
 from IPython.display import display, HTML
 display(HTML("<style>.container { width:100% !important; }</style>"))
+import cProfile
 #####################################################################################################################################
 # -*- coding: utf-8 -*-
 """
@@ -67,7 +68,7 @@ def avanca_indice(tensor):
         for j in range(len(Idx)):
             if lista_indices[i] == Idx[j] or lista_indices[i] == -Idx[j]:
                 ordem_dos_indices.append(j)'''
-                
+
     if len(lista_indices) == 0:
         indice = Idx[0]
     else:
@@ -98,26 +99,24 @@ def troca_indices(tensor1, tensor2):
         for k in range(len(lista_indices2)):
             for l in range(len(Idx)):
                 if lista_indices2[k] == Idx[l] or lista_indices2[k] == - Idx[l]:
-                    ordem_dos_indices2.append(l) #armazena a ordem (na lista Idx) dos índices do tensor2
+                    ordem_dos_indices2.append(l) #armazena a ordem (na lista Idx) dos índices do tensor2'''
 
-        for j in range(len(Idx)):
-                if lista_indices2[0] == Idx[j] or lista_indices2[0] == -Idx[j]:
-                
-                    ordem_dos_indices2 = j #Guilherme: ordem_dos_indices2 agora tem informação apenas do primeiro indice'''
-        
         for i, item in enumerate(Idx):
                 if lista_indices2[0] == item or lista_indices2[0] == -item:
                     ordem_dos_indices2 = i #Guilherme: ordem_dos_indices2 agora tem informação apenas do primeiro indice e o uso do enumerate evita a busca por informações no endereço de Idx
-        
+
+
         tuplas_de_indices = []
-        ind = ordem_dos_indices2
+        ind = ordem_dos_indices2 + 1
+
         '''
+
         for m in range(len(lista_indices1)):
             tuplas_de_indices.append((lista_indices1[m], Idx[ind + len(lista_indices1) - m]))
         '''
         novos_indices = Idx[ind : ind + len(lista_indices1)] #Guilherme: faz um recorte da lista Idx que contém os elementos uteis
         tuplas_de_indices = zip(lista_indices1, reversed(novos_indices))
-        
+
         tensor_novo = tensor1.substitute_indices(*tuplas_de_indices)
 
     else:
@@ -153,9 +152,10 @@ def compara_tensores(tensor1, tensor2):
     Compara 2 tensores e resulta 'True' se os vetores são iguais ou proporcionais.
     """
     t1, t2 = tensor1, tensor2
-    #display(t1, t2)
+
     if len(t1.get_indices()) != len(t2.get_indices()):
         resultado = False
+
     else:
         tupla_teste = (t2-t1).args[:]
         resultado = (len(tupla_teste) == 0 or tupla_teste[0].is_Add or tupla_teste[0].is_Integer)
@@ -177,7 +177,7 @@ def reordena_lista(lista, inversao):
     Reordena a lista de índices de entrada de modo que alpha esteja à esquerda de beta se inversao = 0 ou
     beta esteja à esquerda de alpha no caso de inversao = 1.
     """
-    lista_nova = lista.copy()
+    lista_nova = lista
     N = lista_nova.count(alpha) + lista_nova.count(beta)
     if N == 2:
         pos_alpha = lista_nova.index(alpha)
@@ -191,16 +191,16 @@ def ordem_normal_tupla(tensor, tipo_de_expansao):
     Simplifica e ordena as partes de um tensor simbólico baseado na ordem dos elementos fundamentais
     e na quantidade de derivadas aplicadas. Retorna o tensor reorganizado e a ordem como lista de tuplas.
     """
-    
+
     if tipo_de_expansao == 'dl':
         Elem_fund = Elem_fun_dl
 
     elif tipo_de_expansao == 'gz':
         Elem_fund = Elem_fun_gz
-        
+
     else:
         Elem_fund = Elem_fun_cf
-    
+
     lista_partes_tensor = tensor.split()
     ord_nabla = 0
     ord_normal = []
@@ -213,13 +213,13 @@ def ordem_normal_tupla(tensor, tipo_de_expansao):
 
         if tensor_parte_nova == nabla(Idx[0]) or tensor_parte_nova == grad(Idx[0]) or tensor_parte_nova == D(Idx[0]):
             ord_nabla += 1
-        else: 
+        else:
             for ord_elemf, elemf in enumerate(Elem_fund):
                 if tensor_parte_nova == elemf:
                     ord_normal.append((ord_elemf, ord_nabla))
                     ord_nabla = 0
 
-    
+
     ord_normal.sort(key=lambda x: (x[0], x[1]))
 
     return ord_normal
@@ -229,20 +229,19 @@ def ordem_normal_tensor(ord_normal, tipo_de_expansao):
     Simplifica e ordena as partes de um tensor simbólico baseado na ordem dos elementos fundamentais
     e na quantidade de derivadas aplicadas. Retorna o tensor reorganizado e a ordem como lista de tuplas.
     """
-    
+
     if tipo_de_expansao == 'dl':
         Elem_fund = Elem_fun_dl
 
     elif tipo_de_expansao == 'gz':
         Elem_fund = Elem_fun_gz
-        
+
     else:
         Elem_fund = Elem_fun_cf
 
     pos_R = len(Elem_fund) - 1
-
-    tensor_ordem_normal = 1
     n_idx = 0
+    tensor_ordem_normal = 1
 
     for p, (ord_elem, num_deriv) in enumerate(reversed(ord_normal)):
         nova_parte = Elem_fund[ord_elem]
@@ -329,6 +328,7 @@ def derivada_ordem_normal(ordem_normal, tipo_de_expansao):
 #####################################################################################################################################
 def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
     """
+    .get_indices()
     Construção dos ingredientes para a expansão hidrodinâmica relativística desde a 0-ésima até a n-ésima ordem.
     """
     tipo_exp = tipo_de_expansao
@@ -351,6 +351,8 @@ def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
 
     pos_R = n_elem - 1
     lista_ing, lista_M  = [I0], [M0]
+    lista_ing.append(I1)
+    lista_M.append(M1)
 
 
     '''if ordem_hidro != 0:
@@ -363,61 +365,59 @@ def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
     if ordem_hidro == 1:
           lista_ing_final = lista_ing
     else:
-        lista_ing.append(I1)
-        lista_M.append(M1)
+      for n in range(2, ordem_hidro + 1): #esse loop varia sobre as ordens da hidrodinâmica, desde a segunda até a n-ésima ordem.
+          I_temp = []
 
-    for n in range(2, ordem_hidro + 1): #esse loop varia sobre as ordens da hidrodinâmica, desde a segunda até a n-ésima ordem.
-        I_temp = []
-        for i in range(len(lista_ing[n-1])): #aqui são contruídos os elementos obtidos das derivadas da ordem anterior
-            '''
-            lista_ordem_normal = ordem_normal_free(lista_ing[n-1][i], tipo_exp)[1]
-            ##Guilherme
-            '''
-            lista_ordem_normal = ordem_normal_tupla(lista_ing[n-1][i], tipo_exp)
-            temp1 = derivada_ordem_normal(lista_ordem_normal, tipo_exp)
+          for i in range(len(lista_ing[n-1])): #aqui são contruídos os elementos obtidos das derivadas da ordem anterior
+              '''
+              #lista_ordem_normal = ordem_normal_free(lista_ing[n-1][i], tipo_exp)[1]
+              ##Guilherme
+              '''
+              lista_ordem_normal = ordem_normal_tupla(lista_ing[n-1][i], tipo_exp)
+              temp1 = derivada_ordem_normal(lista_ordem_normal, tipo_exp)
 
-            for j in range(len(temp1)):
-                if compara_tensor_lista(temp1[j], I_temp) == False:
-                    I_temp.append(temp1[j])
+              for j in range(len(temp1)):
+                  if compara_tensor_lista(temp1[j], I_temp) == False:
+                      I_temp.append(temp1[j])
 
-        limite = n//2
-        for b2 in range(1, limite + 1): #aqui são contruídos os elementos obtidos dos produtos de elementos de ordens anteriores
-            B1 = sp.solve(b1 + b2 - n, b1)
-            for k in range(len(lista_ing[B1[0]])):
-                for l in range(len(lista_ing[b2])):
-                    tensor_temp = troca_indices(lista_ing[B1[0]][k], lista_ing[b2][l])
-                    '''
-                    temp2 = ordem_normal_free(tensor_temp*lista_ing[b2][l], tipo_exp)[0]
-                    ##Guilherme
-                    '''
-                    temp2 = ordem_normal_tensor(ordem_normal_tupla(tensor_temp*lista_ing[b2][l], tipo_exp), tipo_exp)
-                    if compara_tensor_lista(temp2, I_temp) == False:
-                        I_temp.append(temp2)
+          limite = n//2
+          for b2 in range(1, limite + 1): #aqui são contruídos os elementos obtidos dos produtos de elementos de ordens anteriores
+              B1 = sp.solve(b1 + b2 - n, b1)
+              for k in range(len(lista_ing[B1[0]])):
+                  for l in range(len(lista_ing[b2])):
+                      tensor_temp = troca_indices(lista_ing[B1[0]][k], lista_ing[b2][l])
+                      '''
+                      temp2 = ordem_normal_free(tensor_temp*lista_ing[b2][l], tipo_exp)[0]
+                      ##Guilherme
+                      '''
+                      temp2 = ordem_normal_tensor(ordem_normal_tupla(tensor_temp*lista_ing[b2][l], tipo_exp), tipo_exp)
+                      if compara_tensor_lista(temp2, I_temp) == False:
+                          I_temp.append(temp2)
 
-        #testa se o tensor de Riemann e/ou o tensor F devem ser incluídos na lista de ingredientes
-        '''if (tipo_exp == 'gz' or tipo_exp == 'dl') and n == 2 and curvatura == 1:
-            I_temp.append(Ri(Idx[3], Idx[2], Idx[1], Idx[0]))
-        if tipo_exp == 'cf' and n == 2 and curvatura == 1:
-            I_temp.append(Fc(Idx[1], Idx[0]))
-            I_temp.append(Rc(Idx[3], Idx[2], Idx[1], Idx[0]))'''
+          #testa se o tensor de Riemann e/ou o tensor F devem ser incluídos na lista de ingredientes
+          '''if (tipo_exp == 'gz' or tipo_exp == 'dl') and n == 2 and curvatura == 1:
+              I_temp.append(Ri(Idx[3], Idx[2], Idx[1], Idx[0]))
+          if tipo_exp == 'cf' and n == 2 and curvatura == 1:
+              I_temp.append(Fc(Idx[1], Idx[0]))
+              I_temp.append(Rc(Idx[3], Idx[2], Idx[1], Idx[0]))'''
 
-        #Guilherme: Não tenho certeza, mas acho que esse arranjo exige menos processamento
-        if n == 2 and curvatura == 1:
-            if(tipo_exp == 'gz' or tipo_exp == 'dl'):
-                I_temp.append(Ri(Idx[3], Idx[2], Idx[1], Idx[0]))
+          #Guilherme: Não tenho certeza, mas acho que esse arranjo exige menos processamento
+          if n == 2 and curvatura == 1:
+              if(tipo_exp == 'gz' or tipo_exp == 'dl'):
+                  I_temp.append(Ri(Idx[3], Idx[2], Idx[1], Idx[0]))
 
-            else:
-                I_temp.append(Fc(Idx[1], Idx[0]))
-                I_temp.append(Rc(Idx[3], Idx[2], Idx[1], Idx[0]))
-        
+              else:
+                  I_temp.append(Fc(Idx[1], Idx[0]))
+                  I_temp.append(Rc(Idx[3], Idx[2], Idx[1], Idx[0]))
 
-        lista_ing.append(I_temp)
-        lista_ing_final = [lista_ing[0]]
 
-        for i in range(1, len(lista_ing)): #realiza a mudança da ordem dos elementos, colocando os Riemann's na parte final da lista
-            lista_ing_fluido, lista_ing_curvatura, lista_ing_temp = [], [], []
+          lista_ing.append(I_temp)
+          lista_ing_final = [lista_ing[0]]
 
-            for j in range(len(lista_ing[i])):
+          for i in range(1, len(lista_ing)):
+              lista_ing_fluido, lista_ing_curvatura, lista_ing_temp = [], [], []
+
+              for j in range(len(lista_ing[i])):
                 '''
                 ord_tens_temp = ordem_normal_free(lista_ing[i][j], tipo_exp)[1]
                 ##Guilherme
@@ -435,21 +435,21 @@ def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
                 else:
                     lista_ing_fluido.append(lista_ing[i][j])
 
-            for l in range(len(lista_ing_fluido)):
-                lista_ing_temp.append(lista_ing_fluido[l])
+              for l in range(len(lista_ing_fluido)):
+                  lista_ing_temp.append(lista_ing_fluido[l])
 
-            for p in range(len(lista_ing_curvatura)):
-                lista_ing_temp.append(lista_ing_curvatura[p])
+              for p in range(len(lista_ing_curvatura)):
+                  lista_ing_temp.append(lista_ing_curvatura[p])
 
-            lista_ing_final.append(lista_ing_temp)
+              lista_ing_final.append(lista_ing_temp)
 
-        M = []
+          M = []
 
-        for m in range(len(lista_ing_final[n])):
+          for m in range(len(lista_ing_final[n])):
             num = len(lista_ing_final[n][m].get_indices())
             M.append(num)
 
-        lista_M.append(M)
+          lista_M.append(M)
 
     return lista_ing_final, lista_M
 #####################################################################################################################################
@@ -1264,7 +1264,7 @@ def estruturas_contraidas(grau_tens, Estruturas_tensoriais, tipo_de_expansao):
         ord_free = ordem_normal_free(Estruturas_tensoriais[r], tipo_exp)[1]
         ##Guilherme
         '''
-        
+
         ord_free = ordem_normal_tupla(Estruturas_tensoriais[r], tipo_exp)
         estrutura_nova = ordem_normal_tensor(ord_free, tipo_exp)
         ord_dummy = ordem_com_indices(Estruturas_tensoriais[r], tipo_exp)
@@ -1360,7 +1360,7 @@ def estruturas_contraidas(grau_tens, Estruturas_tensoriais, tipo_de_expansao):
                         tensor_temp = tensor_temp/data
                     if not (compara_tensor_lista(tensor_temp, Est_contraida)):
                         Est_contraida.append(tensor_temp)
-                        display(tensor_temp)
+                        #display(tensor_temp)
     return Est_contraida
 #####################################################################################################################################
 tipo_de_expansao = 'gz'
@@ -1381,3 +1381,11 @@ est_tens_contraidas = estruturas_contraidas(grau_tensor, Estruturas_gerais, tipo
 for j in range(len(est_tens_contraidas)):
     print(j)
     display(est_tens_contraidas[j])
+#####################################################################################################################################
+'''import cProfile
+import pstats
+
+cProfile.run("ingredientes(ordem_da_expansao, curvatura, tipo_de_expansao)", "saida_prof")
+
+stats = pstats.Stats("saida_prof")
+stats.strip_dirs().sort_stats("tottime").print_stats(20)'''
