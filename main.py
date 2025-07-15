@@ -460,56 +460,53 @@ def estruturas_tensoriais(ordem_hidro, grau_tens, ingredientes, Matriz_M, tipo_d
     a métrica foram retirados, pois na sequência serão realizadas todas as contrações possíveis, e os elementos
     em 'u' que restaram são aqueles que multiplicam o tensor de Riemann.
     """
-    tipo_exp = tipo_de_expansao
-    if tipo_exp == 'gz':
-        n_elem = 4
-    elif tipo_exp == 'dl':
-        n_elem = 7
-    else:
-        n_elem = 5
+    n_elem = {'gz': 4, 'dl': 7}.get(tipo_de_expansao, 5)
     pos_R = n_elem - 1
     N = grau_tens
     I, I0 = ingredientes[ordem_hidro], ingredientes[0]
     M = Matriz_M[ordem_hidro]
     Lista_Est_red = []
-    for m in range(1, len(M)+1): # Esse 2º laço varre os valores possíveis de m, ou seja, sobre todos os ingredientes I.
-        J, J_red, Estruturas_red = [], [], []
-        final = int((M[m-1]+N+2)/2)
-        for a2 in range(0, final):
-            A1_plus = sp.solve(a1+2*a2-M[m-1]-N, a1)
-            A1 = A1_plus
+
+    for m, Mm in enumerate(M, start=1):
+        J = set()
+        J_red, Estruturas_red = [], []
+        final = (Mm + N + 2) // 2
+
+        for a2 in range(final):
+            A1 = sp.solve(a1 + 2*a2 - Mm - N, a1)
             if N != 0:
-                A1_minus = sp.solve(a1+2*a2-M[m-1]+N, a1)
-                A1 = A1 + A1_minus
-            for i in range(len(A1)): #Esse 5º laço varre a lista A1 para adicionar as soluções (a1,a2) à J.
-                indica_presenca = False
-                for j in range(len(J)):
-                    if (A1[i], a2) == J[j]:
-                        indica_presenca = True
-                if not indica_presenca: #Uma solução (a1, a2) só é adicionado se ela não estiver presente em J.
-                    est1, est2 = 1, 1
-                    for k in range(a2):
-                        ind1 = M[m-1] + A1[i] + 2*k + 1
-                        ind2 = M[m-1] + A1[i] + 2*k
-                        est1 = I0[1].substitute_indices((Idx[1], Idx[ind1]), (Idx[0], Idx[ind2]))*est1
-                    for l in range(A1[i]):
-                        ind = M[m-1] + l
-                        est2 = I0[0].substitute_indices((Idx[0], Idx[ind]))*est2
-                    J.append((A1[i], a2))
-                    I_decomposto = I[m-1].split()
-                    if pos_R % 3 == 0 and (A1[i] == 0 or I_decomposto[len(I_decomposto) - 1] == Ri(Idx[3], Idx[2], Idx[1], Idx[0])):
-                        J_red.append((A1[i], a2))
-                        Est_tens = est2*I[m-1]
-                        Estruturas_red.append(Est_tens)
-                        if not compara_tensor_lista(Est_tens, Lista_Est_red):
-                            Lista_Est_red.append(Est_tens)
-                    elif pos_R % 3 != 0 and (A1[i] == 0 or I_decomposto[len(I_decomposto) - 1] == Fc(Idx[1], Idx[0])\
-                                              or I_decomposto[len(I_decomposto) - 1] == Rc(Idx[3], Idx[2], Idx[1], Idx[0])):
-                        J_red.append((A1[i], a2))
-                        Est_tens = est2*I[m-1]
-                        Estruturas_red.append(Est_tens)
-                        if not compara_tensor_lista(Est_tens, Lista_Est_red):
-                            Lista_Est_red.append(Est_tens)
+                A1 += sp.solve(a1 + 2*a2 - Mm + N, a1)
+
+            for A1_val in A1:
+                par = (A1_val, a2)
+                if par in J:
+                    continue
+
+                est1, est2 = 1, 1
+
+                for k in range(a2):
+                    ind1 = Mm + A1_val + 2*k + 1
+                    ind2 = Mm + A1_val + 2*k
+                    est1 *= I0[1].substitute_indices((Idx[1], Idx[ind1]), (Idx[0], Idx[ind2]))
+
+                for l in range(A1_val):
+                    ind = Mm + l
+                    est2 *= I0[0].substitute_indices((Idx[0], Idx[ind]))
+
+                J.add(par)
+                I_decomposto = I[m-1].split()
+
+                cond_1 = (pos_R % 3 == 0 and (A1_val == 0 or I_decomposto[-1] == Ri(Idx[3], Idx[2], Idx[1], Idx[0])))
+                cond_2 = (pos_R % 3 != 0 and (A1_val == 0 or I_decomposto[-1] in [Fc(Idx[1], Idx[0]), Rc(Idx[3], Idx[2], Idx[1], Idx[0])]))
+
+                if cond_1 or cond_2:
+                    J_red.append((A1_val, a2))
+                    Est_tens = est2 * I[m-1]
+                    Estruturas_red.append(Est_tens)
+
+                    if not compara_tensor_lista(Est_tens, Lista_Est_red):
+                        Lista_Est_red.append(Est_tens)
+
     return Lista_Est_red
 #####################################################################################################################################
 def constroi_BSGS(ordem_normal, tipo_de_expansao):
