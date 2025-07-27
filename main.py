@@ -326,6 +326,97 @@ def derivada_ordem_normal(ordem_normal, tipo_de_expansao):
 
     return derivada_tensor
 #####################################################################################################################################
+'''def Estagio_2(n, max_val=None):
+    """
+    Gera todas as combinações de inteiros cuja soma é n,
+    com valores em ordem não crescente.
+    """
+    if max_val is None:
+        max_val = n
+
+    if n == 0:
+        return [[]]
+
+    resultados = []
+    for i in range(min(n, max_val), 0, -1):
+        for subpart in Estagio_2(n - i, i):
+            resultados.append([i] + subpart)
+    return resultados
+
+def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
+    
+
+    lista_tensor_atual = []
+    lista_final = []
+    lista_final_indices = []
+    if tipo_de_expansao == 'dl':
+        Elem_fund = Elem_fun_dl
+
+    elif tipo_de_expansao == 'gz':
+        Elem_fund = Elem_fun_gz
+        for i in range(ordem_hidro+1):
+          for j in range(ordem_hidro+1):
+            for k in range(ordem_hidro+1):
+              for l in range(2,ordem_hidro+1):
+
+                if(i+j+k+l)==ordem_hidro:
+
+                  if i == 1:
+                    lista_tensor_atual.append([(0,i)])
+                  elif i>1:
+                    solucoes = Estagio_2(i)
+                    for s1 in solucoes:
+                      lista_tensor_atual.append([])
+                      for s2 in range(len(s1)):
+                        lista_tensor_atual[-1].append((0,s1[s2]))
+
+                  if j == 1:
+                    for m in range(len(lista_tensor_atual)):
+                      lista_tensor_atual[m].append((1,j))
+
+                  elif j>1:
+                    solucoes = Estagio_2(j)
+                    endereco = len(lista_tensor_atual)
+                    for mult1 in range(1,len(solucoes)):
+                      for mult2 in range(endereco):
+                        lista_tensor_atual.append(lista_tensor_atual[mult2])
+
+                    contador = 0
+                    for s1 in solucoes:
+                      for s2 in range((contador*endereco), (endereco*(contador+1))):
+                        for s3 in range(len(s1)):
+                          lista_tensor_atual[s2].append((1,s1[s3]))
+                      contador = contador + 1
+
+                  if k == 1:
+                    for m in range(len(lista_tensor_atual)):
+                      lista_tensor_atual[m].append((2,k))
+
+                  elif k>1:
+                    solucoes = Estagio_2(k)
+                    endereco = len(lista_tensor_atual)
+                    for mult1 in range(1,len(solucoes)):
+                      for mult2 in range(endereco):
+                        lista_tensor_atual.append(lista_tensor_atual[mult2])
+
+                    contador = 0
+                    for s1 in solucoes:
+                      for s2 in range((contador*endereco), (endereco*(contador+1))):
+                        for s3 in range(len(s1)):
+                          lista_tensor_atual[s2].append((2,s1[s3]))
+                      contador = contador + 1
+
+                  if l==2:
+                    for m in range(len(lista_tensor_atual)):
+                      lista_tensor_atual[m].append((3,l))
+
+                  elif l>2:
+
+    else:
+        Elem_fund = Elem_fun_cf
+
+    return lista_final, lista_final_indices#'''
+#####################################################################################################################################
 def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
     """
     .get_indices()
