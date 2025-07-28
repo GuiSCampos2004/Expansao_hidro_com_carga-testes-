@@ -343,6 +343,46 @@ def derivada_ordem_normal(ordem_normal, tipo_de_expansao):
             resultados.append([i] + subpart)
     return resultados
 
+def Estagio_Riemann(n, lista=[]):
+  copia1 = lista.copy()
+  contador = 0
+  comprimento = len(lista)
+  for i in range(comprimento):
+    if len(lista[i])%2 != 0:
+      del copia1[i-contador]
+      contador = contador + 1
+
+  copia2 = copia1.copy()
+  for i in range(len(copia1)):
+    contador = 0
+    comprimento = len(copia1[i])
+    for j in range((comprimento//2),comprimento):
+      del copia2[i][j-contador]
+      contador = contador + 1
+
+  copia3 = copia2.copy()
+
+  comprimento1 = len(copia2)
+  contador = 0
+  for i in range(comprimento1):
+    somador = 0
+    comprimento2 = len(copia2[i])
+    for j in range(comprimento2):
+      somador = somador + copia2[i][j]
+
+    if (somador + comprimento2) != n:
+      del copia3[i-contador]
+      contador = contador + 1
+
+  for i in range(len(copia3)):
+    for j in range(len(copia3[i])):
+      copia3[i][j] = copia3[i][j] - 1
+
+  del copia1
+  del copia2
+
+  return copia3
+
 def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
     
 
@@ -410,7 +450,28 @@ def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
                     for m in range(len(lista_tensor_atual)):
                       lista_tensor_atual[m].append((3,l))
 
-                  elif l>2:
+                  elif l==3:
+                    for m in range(len(lista_tensor_atual)):
+                      lista_tensor_atual[m].append((3,1))
+
+                  elif l>3:
+                    solucoes = Estagio_Riemann(l, Estagio_2(l))
+                    endereco = len(lista_tensor_atual)
+                    for mult1 in range(1,len(solucoes)):
+                      for mult2 in range(endereco):
+                        lista_tensor_atual.append(lista_tensor_atual[mult2])
+
+                    contador = 0
+                    for s1 in solucoes:
+                      for s2 in range((contador*endereco), (endereco*(contador+1))):
+                        for s3 in range(len(s1)):
+                          lista_tensor_atual[s2].append((3,s1[s3]))
+                      contador = contador + 1
+
+              lista_final_tupla = lista_final_tupla + lista_tensor_atual
+
+        #for i in range(len(lista_final_tupla)):
+          #lista_final_tensor.append(ordem_normal_tensor(lista_final_tupla[i], tipo_de_expansao))
 
     else:
         Elem_fund = Elem_fun_cf
