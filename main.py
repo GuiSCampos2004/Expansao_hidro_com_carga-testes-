@@ -327,10 +327,7 @@ def derivada_ordem_normal(ordem_normal, tipo_de_expansao):
     return derivada_tensor
 #####################################################################################################################################
 '''def Estagio_2(n, max_val=None):
-    """
-    Gera todas as combinações de inteiros cuja soma é n,
-    com valores em ordem não crescente.
-    """
+
     if max_val is None:
         max_val = n
 
@@ -343,7 +340,8 @@ def derivada_ordem_normal(ordem_normal, tipo_de_expansao):
             resultados.append([i] + subpart)
     return resultados
 
-def Estagio_Riemann(n, lista=[]):
+
+def Estagio_Riemann(n, lista):
   copia1 = lista.copy()
   contador = 0
   comprimento = len(lista)
@@ -384,10 +382,11 @@ def Estagio_Riemann(n, lista=[]):
   return copia3
 
 def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
-    
+
 
     lista_tensor_atual = []
-    lista_final = []
+    lista_final_tupla = []
+    lista_final_tensor = []
     lista_final_indices = []
     if tipo_de_expansao == 'dl':
         Elem_fund = Elem_fun_dl
@@ -397,9 +396,9 @@ def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
         for i in range(ordem_hidro+1):
           for j in range(ordem_hidro+1):
             for k in range(ordem_hidro+1):
-              for l in range(2,ordem_hidro+1):
+              for l in range(ordem_hidro+1):
 
-                if(i+j+k+l)==ordem_hidro:
+                if ((i+j+k+l)==ordem_hidro) and (l != 1):
 
                   if i == 1:
                     lista_tensor_atual.append([(0,i)])
@@ -410,73 +409,110 @@ def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
                       for s2 in range(len(s1)):
                         lista_tensor_atual[-1].append((0,s1[s2]))
 
-                  if j == 1:
-                    for m in range(len(lista_tensor_atual)):
-                      lista_tensor_atual[m].append((1,j))
+                  if j == 1: 
+                    if len(lista_tensor_atual) != 0:
+                      for m in range(len(lista_tensor_atual)):
+                        lista_tensor_atual[m].append((1,j))
+                    else:
+                      lista_tensor_atual.append([(1,j)])
 
-                  elif j>1:
-                    solucoes = Estagio_2(j)
-                    endereco = len(lista_tensor_atual)
-                    for mult1 in range(1,len(solucoes)):
-                      for mult2 in range(endereco):
-                        lista_tensor_atual.append(lista_tensor_atual[mult2])
+                  elif j>1: 
+                    if len(lista_tensor_atual) != 0:
+                      solucoes = Estagio_2(j)
+                      endereco = len(lista_tensor_atual)
+                      for mult1 in range(1,len(solucoes)):
+                        for mult2 in range(endereco):
+                          lista_tensor_atual.append(lista_tensor_atual[mult2])
 
-                    contador = 0
-                    for s1 in solucoes:
-                      for s2 in range((contador*endereco), (endereco*(contador+1))):
-                        for s3 in range(len(s1)):
-                          lista_tensor_atual[s2].append((1,s1[s3]))
-                      contador = contador + 1
+                      contador = 0
+                      for s1 in solucoes:
+                        for s2 in range((contador*endereco), (endereco*(contador+1))):
+                          for s3 in range(len(s1)):
+                            lista_tensor_atual[s2].append((1,s1[s3]))
+                        contador = contador + 1
+
+                    else:
+                      solucoes = Estagio_2(j)
+                      for s1 in solucoes:
+                        lista_tensor_atual.append([])
+                        for s2 in range(len(s1)):
+                          lista_tensor_atual[-1].append((1,s1[s2]))
+
 
                   if k == 1:
-                    for m in range(len(lista_tensor_atual)):
-                      lista_tensor_atual[m].append((2,k))
+                    if len(lista_tensor_atual) != 0:
+                      for m in range(len(lista_tensor_atual)):
+                        lista_tensor_atual[m].append((2,k))
+                    else:
+                      lista_tensor_atual.append([(2,k)])
 
                   elif k>1:
-                    solucoes = Estagio_2(k)
-                    endereco = len(lista_tensor_atual)
-                    for mult1 in range(1,len(solucoes)):
-                      for mult2 in range(endereco):
-                        lista_tensor_atual.append(lista_tensor_atual[mult2])
+                    if len(lista_tensor_atual) != 0:
+                      solucoes = Estagio_2(k)
+                      endereco = len(lista_tensor_atual)
+                      for mult1 in range(1,len(solucoes)):
+                        for mult2 in range(endereco):
+                          lista_tensor_atual.append(lista_tensor_atual[mult2])
 
-                    contador = 0
-                    for s1 in solucoes:
-                      for s2 in range((contador*endereco), (endereco*(contador+1))):
-                        for s3 in range(len(s1)):
-                          lista_tensor_atual[s2].append((2,s1[s3]))
-                      contador = contador + 1
+                      contador = 0
+                      for s1 in solucoes:
+                        for s2 in range((contador*endereco), (endereco*(contador+1))):
+                          for s3 in range(len(s1)):
+                            lista_tensor_atual[s2].append((2,s1[s3]))
+                        contador = contador + 1
+
+                    else:
+                      solucoes = Estagio_2(k)
+                      for s1 in solucoes:
+                        lista_tensor_atual.append([])
+                        for s2 in range(len(s1)):
+                          lista_tensor_atual[-1].append((2,s1[s2]))
 
                   if l==2:
-                    for m in range(len(lista_tensor_atual)):
-                      lista_tensor_atual[m].append((3,l))
+                    if len(lista_tensor_atual) != 0:
+                      for m in range(len(lista_tensor_atual)):
+                        lista_tensor_atual[m].append((3,0))
+                    else:
+                      lista_tensor_atual.append([(3,0)])
 
                   elif l==3:
-                    for m in range(len(lista_tensor_atual)):
-                      lista_tensor_atual[m].append((3,1))
+                    if len(lista_tensor_atual) != 0:
+                      for m in range(len(lista_tensor_atual)):
+                        lista_tensor_atual[m].append((3,1))
+                    else:
+                      lista_tensor_atual.append([(3,1)])
 
                   elif l>3:
-                    solucoes = Estagio_Riemann(l, Estagio_2(l))
-                    endereco = len(lista_tensor_atual)
-                    for mult1 in range(1,len(solucoes)):
-                      for mult2 in range(endereco):
-                        lista_tensor_atual.append(lista_tensor_atual[mult2])
+                    if len(lista_tensor_atual) != 0:
+                      solucoes = Estagio_Riemann(l, Estagio_2(l))
+                      endereco = len(lista_tensor_atual)
+                      for mult1 in range(1,len(solucoes)):
+                        for mult2 in range(endereco):
+                          lista_tensor_atual.append(lista_tensor_atual[mult2])
 
-                    contador = 0
-                    for s1 in solucoes:
-                      for s2 in range((contador*endereco), (endereco*(contador+1))):
-                        for s3 in range(len(s1)):
-                          lista_tensor_atual[s2].append((3,s1[s3]))
-                      contador = contador + 1
+                      contador = 0
+                      for s1 in solucoes:
+                        for s2 in range((contador*endereco), (endereco*(contador+1))):
+                          for s3 in range(len(s1)):
+                            lista_tensor_atual[s2].append((3,s1[s3]))
+                        contador = contador + 1
 
-              lista_final_tupla = lista_final_tupla + lista_tensor_atual
+                    else:
+                      solucoes = Estagio_Riemann(l, Estagio_2(l))
+                      for s1 in solucoes:
+                        lista_tensor_atual.append([])
+                        for s2 in range(len(s1)):
+                          lista_tensor_atual[-1].append((3,s1[s2]))
 
-        #for i in range(len(lista_final_tupla)):
-          #lista_final_tensor.append(ordem_normal_tensor(lista_final_tupla[i], tipo_de_expansao))
+                lista_final_tupla = lista_final_tupla + lista_tensor_atual
+                lista_tensor_atual = []
 
     else:
         Elem_fund = Elem_fun_cf
 
-    return lista_final, lista_final_indices#'''
+    return lista_final_tupla
+
+len(ingredientes(5,1,"gz"))#'''
 #####################################################################################################################################
 def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
     """
