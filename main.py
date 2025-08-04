@@ -356,12 +356,12 @@ def Estagio_3(g, lista):
 
     return resultados_final
 
+
 def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
 
 
     lista_tensor_atual = []
     lista_final_tupla = []
-    lista_final_tensor = []
     lista_final_indices = []
 
     if tipo_de_expansao == 'dl':
@@ -556,12 +556,29 @@ def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
 
                     lista_final_tupla = lista_final_tupla + copy.deepcopy(lista_tensor_atual)
 
+        if curvatura == 0:
+          break
+
+      indices = 0
+      for tensor in lista_final_tupla:
+          for elemento in tensor:
+
+              if elemento[0] == 4 or elemento[0] == 5:
+                  indices = indices + 2
+
+              elif elemento[0] == 6:
+                  indices = indices + 4
+          
+              indices = indices + elemento[1]
+
+          lista_final_indices.append(indices)
+          indices = 0
 
     elif tipo_de_expansao == 'gz':
-        for grau_Riemann in range(ordem_hidro+1):
-          for grau_vel in range(ordem_hidro+1):
-            for grau_mi in range(ordem_hidro+1):
-              for grau_temp in range(ordem_hidro+1):
+      for grau_Riemann in range(ordem_hidro+1):
+        for grau_vel in range(ordem_hidro+1):
+          for grau_mi in range(ordem_hidro+1):
+            for grau_temp in range(ordem_hidro+1):
 
                 lista_tensor_atual = []
 
@@ -681,6 +698,25 @@ def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
                                     lista_tensor_atual[-1].append((3,s2))
 
                 lista_final_tupla = lista_final_tupla + copy.deepcopy(lista_tensor_atual)
+
+
+        if curvatura == 0:
+          break
+
+      indices = 0
+      for tensor in lista_final_tupla:
+          for elemento in tensor:
+
+              if elemento[0] == 2:
+                  indices = indices + 1
+
+              elif elemento[0] == 3:
+                  indices = indices + 4
+          
+              indices = indices + elemento[1]
+
+          lista_final_indices.append(indices)
+          indices = 0
 
     else:
       for grau_Riemann in range(ordem_hidro+1):
@@ -815,10 +851,31 @@ def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
 
                 lista_final_tupla = lista_final_tupla + copy.deepcopy(lista_tensor_atual)
 
-    return lista_final_tupla
+          if curvatura == 0:
+            break
+
+        if curvatura == 0:
+            break
+
+      indices = 0
+      for tensor in lista_final_tupla:
+          for elemento in tensor:
+
+              if elemento[0] == 1 or elemento[0] == 2 or elemento[0] == 3:
+                  indices = indices + 2
+
+              elif elemento[0] == 4:
+                  indices = indices + 4
+          
+              indices = indices + elemento[1]
+
+          lista_final_indices.append(indices)
+          indices = 0
+
+    return lista_final_tupla, lista_final_indices
 
 
-ingredientes(4,1,"dl")#'''
+lista_final_tupla, lista_final_indices = ingredientes(3,0,"gz")#'''
 #####################################################################################################################################
 def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
     """
