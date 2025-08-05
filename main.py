@@ -357,7 +357,7 @@ def Estagio_3(g, lista):
     return resultados_final
 
 
-def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
+def ingredientes2(ordem_hidro, curvatura, tipo_de_expansao):
 
 
     lista_tensor_atual = []
@@ -873,9 +873,136 @@ def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
           indices = 0
 
     return lista_final_tupla, lista_final_indices
+#####################################################################################################################################
+def estruturas_tensoriais2(grau_tensor, ingredientes, Lista_M, tipo_de_expansao):
+
+    começo_Rieman = 0
+    lista_estruturas_temp = []
+    lista_estruturas_final = []
+
+    if tipo_de_expansao == 'gz':
+
+        if (grau_tensor % 2) == 0:
+
+            for i in range(len(Lista_M)):
+
+                if (Lista_M[i] % 2) == 0:
+                    lista_estruturas_final = lista_estruturas_final + [copy.deepcopy(ingredientes[i])]
+
+        else:
+
+            for i in range(len(Lista_M)):
+
+                if (Lista_M[i] % 2) != 0:
+                    lista_estruturas_final = lista_estruturas_final + [copy.deepcopy(ingredientes[i])]
+
+        for i in range(len(ingredientes)):
+            for j in range(len(ingredientes[i])):
+                if ingredientes[i][j][0] == 3:
+                    começo_Rieman = i
+                    break
+
+            if começo_Rieman != 0:
+                break
 
 
-lista_final_tupla, lista_final_indices = ingredientes(3,0,"gz")#'''
+        for i in range(começo_Rieman, len(ingredientes)):
+
+            quantidade_de_insert = Lista_M[i] + grau_tensor
+
+            while quantidade_de_insert > 0:
+
+                lista_estruturas_final = lista_estruturas_final + [copy.deepcopy(ingredientes[i])]
+                for k in range(quantidade_de_insert):
+                    lista_estruturas_final[-1].insert(0, (2,0))
+
+                quantidade_de_insert = quantidade_de_insert - 2
+
+            
+
+    elif tipo_de_expansao == 'dl':
+
+        if (grau_tensor % 2) == 0:
+
+            for i in range(len(Lista_M)):
+
+                if (Lista_M[i] % 2) == 0:
+                    lista_estruturas_final = lista_estruturas_final + [copy.deepcopy(ingredientes[i])]
+
+        else:
+
+            for i in range(len(Lista_M)):
+
+                if (Lista_M[i] % 2) != 0:
+                    lista_estruturas_final = lista_estruturas_final + [copy.deepcopy(ingredientes[i])]
+
+        for i in range(len(ingredientes)):
+            for j in range(len(ingredientes[i])):
+                if ingredientes[i][j][0] == 6:
+                    começo_Rieman = i
+                    break
+
+            if começo_Rieman != 0:
+                break
+
+
+        for i in range(começo_Rieman, len(ingredientes)):
+
+            quantidade_de_insert = Lista_M[i] + grau_tensor
+
+            while quantidade_de_insert > 0:
+
+                lista_estruturas_final = lista_estruturas_final + [copy.deepcopy(ingredientes[i])]
+                for k in range(quantidade_de_insert):
+                    lista_estruturas_final[-1].insert(0, (2,0))
+
+                quantidade_de_insert = quantidade_de_insert - 2
+
+
+    else:
+
+        if (grau_tensor % 2) == 0:
+
+            for i in range(len(Lista_M)):
+
+                if (Lista_M[i] % 2) == 0:
+                    lista_estruturas_final = lista_estruturas_final + [copy.deepcopy(ingredientes[i])]
+
+        else:
+
+            for i in range(len(Lista_M)):
+
+                if (Lista_M[i] % 2) != 0:
+                    lista_estruturas_final = lista_estruturas_final + [copy.deepcopy(ingredientes[i])]
+
+        for i in range(len(ingredientes)):
+            for j in range(len(ingredientes[i])):
+                if ingredientes[i][j][0] == 4:
+                    começo_Rieman = i
+                    break
+
+            if começo_Rieman != 0:
+                break
+
+
+        for i in range(começo_Rieman, len(ingredientes)):
+
+            quantidade_de_insert = Lista_M[i] + grau_tensor
+
+            while quantidade_de_insert > 0:
+
+                lista_estruturas_final = lista_estruturas_final + [copy.deepcopy(ingredientes[i])]
+                for k in range(quantidade_de_insert):
+                    lista_estruturas_final[-1].insert(0, (0,0))
+
+                quantidade_de_insert = quantidade_de_insert - 2
+
+
+    return lista_estruturas_final
+
+lista_final_tupla, lista_final_indices = ingredientes2(3,1,"dl")
+print(estruturas_tensoriais2(0, lista_final_tupla, lista_final_indices, "dl"))
+len(estruturas_tensoriais2(0, lista_final_tupla, lista_final_indices, "dl"))#'''
 #####################################################################################################################################
 def ingredientes(ordem_hidro, curvatura, tipo_de_expansao):
     """
